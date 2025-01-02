@@ -140,8 +140,8 @@ class Incident:
         # Check if Google Meet is enabled and return a Google Meet link
         if (
             settings.integrations
-            and settings.integrations.google_meet
-            and settings.integrations.google_meet.enabled
+            and settings.integrations.google
+            and settings.integrations.google.enabled
         ):
             if (settings.options and settings.options.meeting_link):
                 return settings.options.meeting_link
@@ -313,8 +313,12 @@ class Incident:
                     try:
                         # Try to sort out the meeting link provider
                         meeting_link_provider = "Audio"
+
                         if "zoom" in record.meeting_link.lower():
                             meeting_link_provider = "Zoom"
+
+                        if "google" in record.meeting_link.lower():
+                            meeting_link_provider = "Google"
 
                         slack_web_client.bookmarks_add(
                             channel_id=record.channel_id,

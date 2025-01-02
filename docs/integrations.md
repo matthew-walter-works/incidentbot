@@ -266,16 +266,17 @@ Provide the following environment variables:
 
 #### Configuring the Google Meet Integration
 
-In the application's `config.yaml`, you can adjust `google_meet` settings using the `integrations` section:
+In the application's `config.yaml`, you can adjust `google` settings using the `integrations` section:
 
 !!! warning
 
     You must provide all of these values in order for the integration to work. There are no default values for integrations.
 
 ```yaml
-google_meet:
-  enabled: true
-  auto_creating_meeting: true
+integrations:
+  google:
+    enabled: true
+    auto_creating_meeting: true
 ```
 
 ## PagerDuty
@@ -288,8 +289,9 @@ You can integrate with PagerDuty to issue pages to teams. Set the following envi
 In the application's `config.yaml`, you can set the PagerDuty integration to active by setting `enabled` to `true`:
 
 ```yaml
-pagerduty:
-  enabled: true
+integrations:
+  pagerduty:
+    enabled: true
 ```
 
 You are then able to use the bot's pager options. These are introduced at various points through the incident management process.
@@ -326,7 +328,8 @@ In the application's `config.yaml`, you can adjust `zoom` settings using the `in
     You must provide all of these values in order for the integration to work. There are no default values for integrations.
 
 ```yaml
-zoom:
-  enabled: true
-  auto_creating_meeting: true
+integrations:
+  zoom:
+    enabled: true
+    auto_creating_meeting: true
 ```
