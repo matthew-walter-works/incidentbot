@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 from incidentbot.google.meeting import GoogleMeeting
 
 
@@ -31,12 +31,18 @@ class TestGoogleMeeting(unittest.TestCase):
 
         # Initialize the GoogleMeeting instance with a test incident name
         self.incident = "Test Incident"
-        self.google_meeting = GoogleMeeting(self.incident)
+        self.google_meeting = GoogleMeeting(
+            self.incident,
+            self.mock_settings.GOOGLE_CLIENT_ID,
+            self.mock_settings.GOOGLE_CLIENT_SECRET,
+            "http://localhost"  # Assuming redirect_uri is needed
+        )
 
     def test_generate_token_success(self):
         # Test the generation of an OAuth token when the response is successful
         token = self.google_meeting._GoogleMeeting__generate_token()
-        self.assertEqual(token, "mock_access_token")  # Verify the token matches the mock value
+        # Verify the token matches the mock value
+        self.assertEqual(token, "mock_access_token")
         self.mock_post.assert_called_once()  # Ensure 'requests.post' was called once
 
     def test_generate_token_failure(self):
@@ -46,18 +52,19 @@ class TestGoogleMeeting(unittest.TestCase):
             "error": "invalid_request"}
 
         token = self.google_meeting._GoogleMeeting__generate_token()
-        self.assertIsNone(token)  # Token generation should fail and return None
+        # Token generation should fail and return None
+        self.assertIsNone(token)
         self.mock_post.assert_called_once()  # Ensure 'requests.post' was called once
 
     def test_create_meeting_success(self):
         # Mock successful responses for token generation and meeting creation
         self.mock_post.side_effect = [
             # First call for token generation
-            unittest.mock.Mock(
+            Mock(
                 status_code=200, json=lambda: {"access_token": "mock_access_token"}
             ),
             # Second call for meeting creation
-            unittest.mock.Mock(
+            Mock(
                 status_code=200,
                 json=lambda: {
                     "conferenceData": {
@@ -70,29 +77,34 @@ class TestGoogleMeeting(unittest.TestCase):
         ]
 
         meeting_url = self.google_meeting.url
-        self.assertEqual(meeting_url, "https://meet.google.com/mock-meeting")  # Verify the meeting URL
-        self.assertEqual(self.mock_post.call_count, 2)  # Ensure both token and meeting creation calls were made
+        # Verify the meeting URL
+        self.assertEqual(meeting_url, "https://meet.google.com/mock-meeting")
+        # Ensure both token and meeting creation calls were made
+        self.assertEqual(self.mock_post.call_count, 2)
 
     def test_create_meeting_failure(self):
         # Mock a successful token generation but failed meeting creation
         self.mock_post.side_effect = [
-            unittest.mock.Mock(
+            Mock(
                 status_code=200, json=lambda: {"access_token": "mock_access_token"}
             ),
-            unittest.mock.Mock(
+            Mock(
                 status_code=400, json=lambda: {"error": "bad_request"}
             ),
         ]
 
         meeting_url = self.google_meeting.url
-        self.assertIsNone(meeting_url)  # Meeting creation should fail and return None
-        self.assertEqual(self.mock_post.call_count, 2)  # Ensure both token and meeting creation calls were made
+        # Meeting creation should fail and return None
+        self.assertIsNone(meeting_url)
+        # Ensure both token and meeting creation calls were made
+        self.assertEqual(self.mock_post.call_count, 2)
 
     def test_auth_success(self):
         # Test that authentication succeeds when token generation is successful
         auth_status = self.google_meeting.test_auth()
         self.assertTrue(auth_status)  # Authentication should succeed
-        self.mock_post.assert_called_once()  # Ensure 'requests.post' was called once for token generation
+        # Ensure 'requests.post' was called once for token generation
+        self.mock_post.assert_called_once()
 
     def test_auth_failure(self):
         # Mock a failed token generation response
@@ -102,7 +114,8 @@ class TestGoogleMeeting(unittest.TestCase):
 
         auth_status = self.google_meeting.test_auth()
         self.assertFalse(auth_status)  # Authentication should fail
-        self.mock_post.assert_called_once()  # Ensure 'requests.post' was called once for token generation
+        # Ensure 'requests.post' was called once for token generation
+        self.mock_post.assert_called_once()
 
 
 if __name__ == "__main__":

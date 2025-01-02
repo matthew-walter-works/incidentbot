@@ -8,7 +8,7 @@ from incidentbot.logging import logger
 class GoogleMeeting:
     """Creates a Google Meet meeting"""
 
-    def __init__(self, incident: str):
+    def __init__(self, incident: str, client_id: str, client_secret: str, redirect_uri: str):
         self.incident = incident
         self.endpoint = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
         self._token = None  # Cache the token
@@ -16,6 +16,9 @@ class GoogleMeeting:
             "authorization": None,
             "content-type": "application/json",
         }
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.redirect_uri = redirect_uri
 
     def __get_token(self) -> str:
         """Generate and cache the OAuth2 token."""
@@ -62,6 +65,10 @@ class GoogleMeeting:
                 logger.error(f"Error creating Google Meet meeting: {res.status_code}, {res_json}")
                 return None
 
+            if "conferenceData" not in res_json or "entryPoints" not in res_json["conferenceData"]:
+                logger.error("Error creating Google Meet meeting: Missing 'conferenceData' or 'entryPoints' in response.")
+                return None
+
             return res_json["conferenceData"]["entryPoints"][0]["uri"]
         except Exception as error:
             logger.error(f"Error creating Google Meet meeting: {error}")
@@ -73,8 +80,8 @@ class GoogleMeeting:
             endpoint = "https://oauth2.googleapis.com/token"
             payload = {
                 "grant_type": "refresh_token",
-                "client_id": settings.GOOGLE_CLIENT_ID,
-                "client_secret": settings.GOOGLE_CLIENT_SECRET,
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
                 "refresh_token": settings.GOOGLE_REFRESH_TOKEN,
             }
             res = requests.post(endpoint, data=payload)
