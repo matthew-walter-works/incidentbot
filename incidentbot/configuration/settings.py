@@ -199,6 +199,15 @@ class ZoomIntegration(BaseModel):
     enabled: bool = False
 
 
+class GoogleIntegration(BaseModel):
+    """
+    Model for the google field
+    """
+
+    auto_creating_meeting: bool
+    enabled: bool = False
+
+
 class Integrations(BaseModel):
     """
     Model for the integrations field
@@ -207,6 +216,7 @@ class Integrations(BaseModel):
     atlassian: AtlassianIntegration | None = None
     pagerduty: PagerDutyIntegration | None = None
     zoom: ZoomIntegration | None = None
+    google: GoogleIntegration | None = None
 
 
 """
@@ -367,6 +377,10 @@ class Settings(BaseSettings):
 
     BETTERSTACK_UPTIME_API_TOKEN: str | None = None
 
+    GOOGLE_CLIENT_ID: str | None = None
+    GOOGLE_CLIENT_SECRET: str | None = None
+    GOOGLE_REFRESH_TOKEN: str | None = None
+
     PAGERDUTY_API_TOKEN: str | None = None
     PAGERDUTY_API_USERNAME: str | None = None
 
@@ -515,6 +529,21 @@ class Settings(BaseSettings):
                     "PAGERDUTY_API_TOKEN",
                     self.PAGERDUTY_API_TOKEN,
                     "PagerDuty",
+                )
+
+            if (
+                self.integrations
+                and self.integrations.google
+                and self.integrations.google.enabled
+            ):
+                self._check_required_integration_var(
+                    "GOOGLE_CLIENT_ID", self.GOOGLE_CLIENT_ID, "Google"
+                )
+                self._check_required_integration_var(
+                    "GOOGLE_CLIENT_SECRET", self.GOOGLE_CLIENT_SECRET, "Google"
+                )
+                self._check_required_integration_var(
+                    "GOOGLE_REFRESH_TOKEN", self.GOOGLE_REFRESH_TOKEN, "Google"
                 )
 
             if (

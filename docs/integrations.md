@@ -243,6 +243,41 @@ You can use the buttons to provide updates. The message will be updated indicati
 
 ![Statuspage final update](./assets/statuspage_final_update.png){: style="width:600px"}
 
+## Google Meet
+The bot can automatically create a Google Meet meeting for each new incident.
+
+If you want to automatically create an instant Google Meet meeting for each incident, use the following steps to enable the integration:
+
+1. Visit the [Google Cloud Console](https://console.cloud.google.com/).
+2. Create a new project or select an existing project.
+3. Enable the Google Calendar API for the project.
+4. Create OAuth 2.0 credentials and obtain a client ID, client secret, and refresh token.
+5. Add the client ID, client secret, and refresh token to the environment variables as shown below.
+
+!!! warning
+
+    The refresh token must be generated with the appropriate scopes to allow creating Google Meet links via the Google Calendar API.
+
+Provide the following environment variables:
+
+- `GOOGLE_CLIENT_ID` - The client ID from the OAuth 2.0 credentials.
+- `GOOGLE_CLIENT_SECRET` - The client secret from the OAuth 2.0 credentials.
+- `GOOGLE_REFRESH_TOKEN` - The refresh token generated for the OAuth 2.0 credentials.
+
+#### Configuring the Google Meet Integration
+
+In the application's `config.yaml`, you can adjust `google_meet` settings using the `integrations` section:
+
+!!! warning
+
+    You must provide all of these values in order for the integration to work. There are no default values for integrations.
+
+```yaml
+google_meet:
+  enabled: true
+  auto_creating_meeting: true
+```
+
 ## PagerDuty
 
 You can integrate with PagerDuty to issue pages to teams. Set the following environment variables:

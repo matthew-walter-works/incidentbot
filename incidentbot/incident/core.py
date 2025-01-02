@@ -18,6 +18,7 @@ from incidentbot.slack.messages import (
 )
 from incidentbot.statuspage.slack import return_new_statuspage_incident_message
 from incidentbot.zoom.meeting import ZoomMeeting
+from incidentbot.google.meeting import GoogleMeeting
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
@@ -124,18 +125,31 @@ class Incident:
             return
 
     def generate_meeting_link(self, channel_name: str) -> str | None:
+
+        # Check if Zoom is enabled and return a Zoom link
         if (
             settings.integrations
             and settings.integrations.zoom
             and settings.integrations.zoom.enabled
         ):
-            return ZoomMeeting(incident=channel_name).url
-        else:
-            return (
-                settings.options.meeting_link
-                if settings.options.meeting_link
-                else None
-            )
+            if (settings.options and settings.options.meeting_link):
+                return settings.options.meeting_link
+            else:
+                return ZoomMeeting(incident=channel_name).url
+
+        # Check if Google Meet is enabled and return a Google Meet link
+        if (
+            settings.integrations
+            and settings.integrations.google_meet
+            and settings.integrations.google_meet.enabled
+        ):
+            if (settings.options and settings.options.meeting_link):
+                return settings.options.meeting_link
+            else:
+                return GoogleMeeting(incident=channel_name).url
+
+        # If no predefined link or integrations are enabled, return None
+        return None
 
     def start(self) -> str:
         """
@@ -207,7 +221,8 @@ class Incident:
                 """
 
                 logger.info(
-                    f"Sending message to digest channel for: {record.channel_name}"
+                    f"Sending message to digest channel for: {
+                        record.channel_name}"
                 )
                 try:
                     digest_message = slack_web_client.chat_postMessage(
@@ -217,7 +232,8 @@ class Incident:
                             incident_components=record.components,
                             incident_description=record.description,
                             incident_impact=record.impact,
-                            incident_slug=f"{settings.options.channel_name_prefix}-{record.id}",
+                            incident_slug=f"{
+                                settings.options.channel_name_prefix}-{record.id}",
                             initial_status=record.status,
                             meeting_link=record.meeting_link,
                             severity=record.severity,
@@ -226,7 +242,8 @@ class Incident:
                     )
                 except slack_sdk.errors.SlackApiError as error:
                     logger.error(
-                        f"Error sending message to incident digest channel: {error}"
+                        f"Error sending message to incident digest channel: {
+                            error}"
                     )
 
                 """
@@ -242,7 +259,8 @@ class Incident:
                 try:
                     slack_web_client.conversations_setTopic(
                         channel=record.channel_id,
-                        topic=f"Severity: {record.severity.upper()} | Status: {record.status.title()}",
+                        topic=f"Severity: {record.severity.upper()} | Status: {
+                            record.status.title()}",
                     )
                 except slack_sdk.errors.SlackApiError as error:
                     logger.error(
@@ -283,7 +301,8 @@ class Incident:
                     )
                 except slack_sdk.errors.SlackApiError as error:
                     logger.error(
-                        f"Error sending welcome message to incident channel: {error}"
+                        f"Error sending welcome message to incident channel: {
+                            error}"
                     )
 
                 """
@@ -308,7 +327,8 @@ class Incident:
                         )
                     except slack_sdk.errors.SlackApiError as error:
                         logger.error(
-                            f"Error adding meeting bookmark to channel: {error}"
+                            f"Error adding meeting bookmark to channel: {
+                                error}"
                         )
 
                 """
@@ -413,7 +433,8 @@ class Incident:
                             )["users"]
                         except Exception as error:
                             logger.error(
-                                f"Error getting group members for {gr}: {error}"
+                                f"Error getting group members for {
+                                    gr}: {error}"
                             )
                             raise
 
@@ -428,7 +449,8 @@ class Incident:
 
                             # Write event log
                             EventLogHandler.create(
-                                event=f"Group {gr} was invited to the incident channel based on configured settings",
+                                event=f"Group {
+                                    gr} was invited to the incident channel based on configured settings",
                                 incident_id=record.id,
                                 incident_slug=record.slug,
                                 source="system",
@@ -497,7 +519,8 @@ class Incident:
                     )
                 except slack_sdk.errors.SlackApiError as error:
                     logger.error(
-                        f"Error sending Statuspage prompt to incident channel {record.channel_name}: {error}"
+                        f"Error sending Statuspage prompt to incident channel {
+                            record.channel_name}: {error}"
                     )
 
             """
@@ -531,7 +554,8 @@ class Incident:
 
                             # Write event log
                             EventLogHandler.create(
-                                event=f"Created PagerDuty incident for team {k} at user request",
+                                event=f"Created PagerDuty incident for team {
+                                    k} at user request",
                                 incident_id=record.id,
                                 incident_slug=record.slug,
                                 source="system",
@@ -549,7 +573,8 @@ class Incident:
                     )
                 except slack_sdk.errors.SlackApiError as error:
                     logger.error(
-                        f"Error sending additional information to the incident channel {record.channel_name}: {error}"
+                        f"Error sending additional information to the incident channel {
+                            record.channel_name}: {error}"
                     )
 
             """
@@ -577,7 +602,8 @@ class Incident:
                     resp = issue_obj.new()
 
                     if resp is not None:
-                        issue_link = f"{settings.ATLASSIAN_API_URL}/browse/{resp.get('key')}"
+                        issue_link = f"{
+                            settings.ATLASSIAN_API_URL}/browse/{resp.get('key')}"
 
                         jira_issue_record = JiraIssueRecord(
                             key=resp.get("key"),
@@ -601,7 +627,8 @@ class Incident:
                                     type=settings.integrations.atlassian.jira.auto_create_issue_type,
                                     link=issue_link,
                                 ),
-                                text=f"A Jira issue has been created for this incident: {resp.get('self')}",
+                                text=f"A Jira issue has been created for this incident: {
+                                    resp.get('self')}",
                             )
                             slack_web_client.pins_add(
                                 channel=record.channel_id,
@@ -609,11 +636,13 @@ class Incident:
                             )
                         except Exception as error:
                             logger.error(
-                                f"Error sending Jira issue message for {record.channel_name}: {error}"
+                                f"Error sending Jira issue message for {
+                                    record.channel_name}: {error}"
                             )
                 except Exception as error:
                     logger.error(
-                        f"Error creating Jira incident for {record.channel_name}: {error}"
+                        f"Error creating Jira incident for {
+                            record.channel_name}: {error}"
                     )
 
             """
@@ -705,7 +734,8 @@ class Incident:
                             )
             except Exception as error:
                 logger.error(
-                    f"Error sending additional welcome message to {record.slug}: {error}"
+                    f"Error sending additional welcome message to {
+                        record.slug}: {error}"
                 )
 
             """
