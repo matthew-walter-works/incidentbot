@@ -94,10 +94,16 @@ class TestGoogleMeeting(unittest.TestCase):
             ),
         ]
 
+        # Attempt to create a meeting
         meeting_url = self.google_meeting.url
 
         # Assert meeting creation fails and returns None
-        self.assertIsNone(meeting_url, "Meeting creation should fail and return None.")
+        self.assertIsNone(
+            meeting_url, "Meeting creation should fail and return None."
+        )
+
+        # Log all calls for debugging
+        print("Mock call arguments:", self.mock_post.call_args_list)
 
         # Ensure the token generation and meeting creation API calls were made
         self.assertEqual(
@@ -125,8 +131,9 @@ class TestGoogleMeeting(unittest.TestCase):
                 "content-type": "application/json",
             },
             params={"conferenceDataVersion": 1},
-            data=unittest.mock.ANY,  # Use ANY to match the meeting payload
+            data=unittest.mock.ANY,  # Match the meeting creation payload
         )
+
 
     def test_auth_success(self):
         # Test that authentication succeeds when token generation is successful
