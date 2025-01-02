@@ -21,11 +21,26 @@ class TestGoogleMeetingIntegration(unittest.TestCase):
 
     def test_meeting_creation(self):
         """Test the creation of a Google Meet meeting."""
-        # Attempt to create a meeting
+        # Ensure token is already retrieved before creating the meeting
+        if not self.meeting._token:
+            print("Visit the following URL to authorize:")
+            print(self.meeting.get_authorization_url())
+            authorization_code = input(
+                "Enter the authorization code from the browser: "
+            )
+            self.assertTrue(
+                self.meeting.exchange_authorization_code(authorization_code),
+                "Failed to exchange authorization code for tokens.",
+            )
+
+        # Access the URL property to invoke __create
         meet_url = self.meeting.url
-        self.assertIsNotNone(meet_url, "Failed to create a Google Meet meeting.")
+        self.assertIsNotNone(
+            meet_url, "Failed to create a Google Meet meeting."
+        )
         self.assertTrue(
-            meet_url.startswith("https://meet.google.com/"), "Invalid Google Meet URL."
+            meet_url.startswith(
+                "https://meet.google.com/"), "Invalid Google Meet URL."
         )
         print("Google Meet URL:", meet_url)
 
@@ -42,7 +57,8 @@ class TestGoogleMeetingIntegration(unittest.TestCase):
             self.incident, "invalid-client-id", "invalid-client-secret", "http://localhost"
         )
         token = invalid_meeting.test_auth()
-        self.assertFalse(token, "Authentication should fail with invalid credentials.")
+        self.assertFalse(
+            token, "Authentication should fail with invalid credentials.")
         print("Invalid token correctly handled.")
 
 
