@@ -83,7 +83,8 @@ class TestGoogleMeeting(unittest.TestCase):
         self.assertEqual(self.mock_post.call_count, 2)
 
     def test_create_meeting_failure(self):
-        # Mock a successful token generation but failed meeting creation
+        """Test the failure of meeting creation after successful token generation."""
+        # Mock responses for token generation and meeting creation
         self.mock_post.side_effect = [
             Mock(
                 status_code=200, json=lambda: {"access_token": "mock_access_token"}
@@ -94,10 +95,38 @@ class TestGoogleMeeting(unittest.TestCase):
         ]
 
         meeting_url = self.google_meeting.url
-        # Meeting creation should fail and return None
-        self.assertIsNone(meeting_url)
-        # Ensure both token and meeting creation calls were made
-        self.assertEqual(self.mock_post.call_count, 2)
+
+        # Assert meeting creation fails and returns None
+        self.assertIsNone(meeting_url, "Meeting creation should fail and return None.")
+
+        # Ensure the token generation and meeting creation API calls were made
+        self.assertEqual(
+            self.mock_post.call_count,
+            2,
+            f"Expected 2 API calls, but {self.mock_post.call_count} were made.",
+        )
+
+        # Assert the token generation call
+        self.mock_post.assert_any_call(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "grant_type": "refresh_token",
+                "client_id": "mock_client_id",
+                "client_secret": "mock_client_secret",
+                "refresh_token": "mock_refresh_token",
+            },
+        )
+
+        # Assert the meeting creation call
+        self.mock_post.assert_any_call(
+            "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+            headers={
+                "authorization": "Bearer mock_access_token",
+                "content-type": "application/json",
+            },
+            params={"conferenceDataVersion": 1},
+            data=unittest.mock.ANY,  # Use ANY to match the meeting payload
+        )
 
     def test_auth_success(self):
         # Test that authentication succeeds when token generation is successful

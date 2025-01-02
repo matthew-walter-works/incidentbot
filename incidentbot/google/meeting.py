@@ -25,6 +25,7 @@ class GoogleMeeting:
         if not self._token:
             self._token = self.__generate_token()
             if self._token:
+                logger.debug(f"Token successfully generated: {self._token}")
                 self.headers["authorization"] = f"Bearer {self._token}"
             else:
                 logger.error("Failed to generate a valid token.")
@@ -32,6 +33,8 @@ class GoogleMeeting:
 
     def __create(self) -> str:
         """Create a Google Meet meeting and return its URL."""
+        logger.debug("Starting the Google Meet meeting creation process.")
+
         if not self.__get_token():
             logger.error("No valid token available for creating the meeting.")
             return None
@@ -53,6 +56,7 @@ class GoogleMeeting:
         }
 
         try:
+            logger.debug(f"Sending request to {self.endpoint} with meeting details: {meeting_details}")
             res = requests.post(
                 self.endpoint,
                 headers=self.headers,
@@ -61,6 +65,8 @@ class GoogleMeeting:
             )
 
             res_json = res.json()
+            logger.debug(f"Response received: {res_json}")
+
             if res.status_code != 200:
                 logger.error(f"Error creating Google Meet meeting: {res.status_code}, {res_json}")
                 return None
@@ -73,6 +79,7 @@ class GoogleMeeting:
         except Exception as error:
             logger.error(f"Error creating Google Meet meeting: {error}")
             return None
+
 
     def __generate_token(self) -> str:
         """Generate an OAuth2 token using a service account or user credentials."""
