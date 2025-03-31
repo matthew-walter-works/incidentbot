@@ -312,6 +312,28 @@ class Incident:
                         )
 
                 """
+                Pin meeting link to channel (optional)
+                """
+
+                if (
+                    record.meeting_link
+                    and settings.options.pin_meeting_link_to_channel
+                ):
+                    try:
+                        resp = slack_web_client.chat_postMessage(
+                            channel=record.channel_id,
+                            text=f"Join the meeting here: {record.meeting_link}",
+                        )
+                        slack_web_client.pins_add(
+                            channel=record.channel_id,
+                            timestamp=resp["ts"],
+                        )
+                    except slack_sdk.errors.SlackApiError as error:
+                        logger.error(
+                            f"Error pinning meeting link to channel: {error}"
+                        )
+
+                """
                 Database commit
                 """
 
@@ -407,13 +429,13 @@ class Incident:
                                         for g in all_workspace_groups.get(
                                             "usergroups"
                                         )
-                                        if g["handle"] == gr
+                                        if g["handle"] == gr.name
                                     ][0]["id"],
                                 )
                             )["users"]
                         except Exception as error:
                             logger.error(
-                                f"Error getting group members for {gr}: {error}"
+                                f"Error getting group members for {gr.name}: {error}"
                             )
                             raise
 
@@ -428,7 +450,7 @@ class Incident:
 
                             # Write event log
                             EventLogHandler.create(
-                                event=f"Group {gr} was invited to the incident channel based on configured settings",
+                                event=f"Group {gr.name} was invited to the incident channel based on configured settings",
                                 incident_id=record.id,
                                 incident_slug=record.slug,
                                 source="system",
