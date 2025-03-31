@@ -13,7 +13,7 @@ init-db-schema: shell
 lint:
 	ruff check --verbose
 
-run-migrations: shell
+migrations: shell
 	./$(VENV)/bin/alembic upgrade head
 
 run: shell
@@ -29,9 +29,9 @@ test-exec:
 	./$(VENV)/bin/python3 test.py
 
 tests:
-	./$(VENV)/bin/python -m pytest -v tests/
+	IS_TEST_ENVIRONMENT=true ./$(VENV)/bin/python -m pytest -v tests/
 
 update: shell
 	poetry update
 
-.PHONY: clean generate-client init-db-schema lint run-migrations run-server setup shell test-exec tests update
+.PHONY: clean generate-client init-db-schema lint migrations run setup shell test-exec tests update
